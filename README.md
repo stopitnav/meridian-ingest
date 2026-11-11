@@ -24,7 +24,46 @@ every issue found, with original and corrected values.
 `sample-validation-report.json` in this repo is the report produced
 from the provided sample feed.
 
-## 2. Design decisions
+## 2. Data model
+
+**Canonical position** (`core/models.py::CanonicalPosition`) — what a
+validated row becomes, decoupled from Meridian's raw column names:
+
+| Field | Type | From CSV column | Notes |
+|---|---|---|---|
+| `source_row_id` | `str` | `source_row_id` | Primary key; audit-trail key back to Meridian's system |
+| `account_id` | `str` | `account_id` | Internal account number, not the client's display name |
+| `account_holder` | `str` | `account_holder` | Display only — never keyed off, per Dana's note |
+| `fund_name` | `str` | `fund_name` | Share class suffix stripped out (see below) |
+| `share_class` | `str \| None` | `fund_name` | Parsed out of `fund_name` when present (`<Fund> - Class <X>`) |
+| `vintage_year` | `int \| None` | `vintage_year` | |
+| `commitment` | `Decimal` | `commitment` | Blank/non-numeric → `0` (flagged, never silently dropped) |
+| `nav` | `Decimal` | `nav` | |
+| `nav_date` | `str` (ISO `yyyy-mm-dd`) | `nav_date` | Normalized from whatever format the legacy system emitted |
+| `currency` | `str` | `currency` | Uppercased ISO 4217 |
+| `status` | `str` | `status` | `Active` or `Closed` |
+| `advisor_email` | `str \| None` | `advisor_email` | |
+| `raw` | `dict` | *(whole row)* | Kept in memory for the report only — **never persisted** |
+
+**SQLite table** (`core/store.py::SCHEMA`) mirrors the canonical fields
+exactly, plus four audit columns the canonical model doesn't carry:
+`content_hash` (drives the inserted/updated/ignored decision),
+`first_ingested_at`, `last_ingested_at`, `last_source_file`. Two
+deliberate choices in the schema:
+
+- `commitment` and `nav` are stored as `TEXT` (stringified `Decimal`),
+  not `REAL` — avoids float rounding on money fields, which matters
+  more than query-side arithmetic convenience for a position store.
+- `raw` is dropped before anything reaches SQLite. The original CSV
+  row is only needed to build issue messages (original vs. corrected
+  value) at report time; keeping it in the store would mean persisting
+  Meridian's raw export shape indefinitely for no read path that uses it.
+
+**Report-only types** (`Issue`, `RowResult`) never touch the database —
+they exist purely to build the JSON/console report and are discarded
+after a run.
+
+## 3. Design decisions
 
 1. **Reject/warn/auto-fix per field**, not per row — and only two row
    outcomes exist, accepted or rejected; there's no third "maybe" state.
