@@ -79,16 +79,25 @@ after a run.
    outcomes exist — accepted or rejected; *why* lives in the issue
    message, not in extra outcome states.
 2. **Idempotent via content-hash, not just key.** Exact resend →
-   `ignored`; same key, changed values → `updated` with a field diff;
-   new key → `inserted`. "Latest file wins" without silently clobbering
-   history.
+   `ignored`; same key, changed values → `updated`, with a field diff
+   included in that run's report; new key → `inserted`. "Latest file
+   wins" without silently overwriting a value with no record of the
+   change — though note the diff lives only in that run's report, not
+   in the database itself, which has no history table and only ever
+   holds current values. Compliance audit-trail durability beyond a
+   single run's report is a gap worth raising, not something built here.
 3. **In-file duplicates (`src-1007`) are `ignored` too**, same bucket as
    a resend — last occurrence wins, but flagged in the issue message
    rather than resolved silently.
 4. **Validation is row-level, not file-level** — one bad row doesn't
    block the rest of the file.
-5. **Non-USD currency is accepted, not rejected** — EUR is valid, just
-   uncommon; flagged for FX review rather than treated as an error.
+5. **Non-USD currency is accepted, not rejected — a launch default,
+   not a settled answer.** EUR is valid ISO 4217, just uncommon;
+   flagged for FX review rather than treated as an error, so we're not
+   blocked on it now. Open question sent to Dana: does the platform
+   actually handle multi-currency positions, or should non-USD be
+   rejected until FX conversion exists? May need to change before the
+   100k-row batch.
 6. **Share-class parsing is pattern-specific** (`<Fund> - Class <X>`),
    not a generic dash-split, so an unrelated dash won't corrupt a name.
 7. **At 100k-row scale** (discussion only, not built): stream the CSV
