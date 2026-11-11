@@ -49,7 +49,7 @@ validated row becomes, decoupled from Meridian's raw column names:
 plus four audit columns the canonical model doesn't carry:
 `content_hash` (drives the inserted/updated/ignored decision),
 `first_ingested_at`, `last_ingested_at`, `last_source_file`. Two
-deliberate choices in the schema:
+choices in the schema to call out specifically:
 
 - `commitment` and `nav` are stored as `commitment_cents`/`nav_cents`
   **integer minor units**, not `TEXT` or `REAL`. A platform for LPs/GPs
@@ -89,9 +89,9 @@ after a run.
 4. **Validation is row-level, not file-level** — one bad row doesn't
    block the rest of the file.
 5. **Non-USD currency is accepted, not rejected — a launch default,
-   not a settled answer.** EUR is valid ISO 4217, just uncommon;
-   flagged for FX review rather than treated as an error, so we're not
-   blocked on it now. Open question sent to Dana: does the platform
+   not a settled answer.** EUR is valid ISO 4217, just uncommon. Worth
+   a flag in review with Dana rather than treating it as a blocking
+   error for now. Open question sent to her: does the platform
    actually handle multi-currency positions, or should non-USD be
    rejected until FX conversion exists? May need to change before the
    100k-row batch.

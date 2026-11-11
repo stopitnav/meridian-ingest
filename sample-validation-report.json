@@ -1,6 +1,6 @@
 {
   "source_file": "sample-positions-feed.csv",
-  "ingested_at": "2026-11-11T17:01:36.450782+00:00",
+  "ingested_at": "2026-11-11T17:08:13.282911+00:00",
   "summary": {
     "total_rows": 25,
     "inserted": 19,
