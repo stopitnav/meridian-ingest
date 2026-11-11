@@ -120,3 +120,13 @@ after a run.
    the webhook Dana mentioned; add schema-drift detection before
    row-level validation starts, since that's a cheaper, earlier
    failure mode at that volume.
+
+   One thing worth calling out specifically: the content-hash idempotency
+   check (decision #2) is **not** where the cost would be at 100k rows —
+   measured at ~0.4s for 100k hash computations, negligible. The actual
+   bottleneck is that `PositionStore` commits after every single row
+   (`_insert`/`_touch`/`_update` each call `conn.commit()`); measured at
+   ~35s for 100k rows that way, vs. ~0.8s batched into one commit per
+   file. That's a ~40x difference from changing *when* we commit, not
+   from anything related to hashing — worth fixing before this scales,
+   but deliberately left as a known, measured gap rather than fixed here.
