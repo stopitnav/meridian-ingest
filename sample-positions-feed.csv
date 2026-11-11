@@ -1,0 +1,26 @@
+source_row_id,account_id,account_holder,fund_name,vintage_year,commitment,nav,nav_date,currency,status,advisor_email
+src-1001,MC-88213,Halloway Family Trust,North Haven VII,2019,5000000,4123500.25,2026-03-31,USD,Active,k.brennan@meridiancap.example
+src-1002,MC-88213,Halloway Family Trust,Riverview III,2021,2500000,2210800.00,2026-03-31,USD,Active,k.brennan@meridiancap.example
+src-1003,MC-90117,Beaumont Holdings LP,North Haven VII,2019,10000000,8247000.50,2026-03-31,USD,Active,s.okafor@meridiancap.example
+src-1004,MC-90117,Beaumont Holdings LP,Ridgeline Credit II,2022,3000000,2955100.00,03/31/2026,USD,Active,s.okafor@meridiancap.example
+src-1005,MC-77042,Alvarez Revocable Trust,Meridian Growth VI - Class A,2020,1500000,1870900.75,2026-03-31,USD,Active,k.brennan@meridiancap.example
+src-1006,MC-77042,Alvarez Revocable Trust,Riverview II,2017,2000000,412300.10,2026-03-31,USD,Active,k.brennan@meridiancap.example
+src-1007,MC-61290,Donnelly Irrevocable Trust,North Haven VII ,2019,4000000,3298800.00,2026-03-31,USD,Active,j.lam@meridiancap.example
+src-1007,MC-61290,Donnelly Irrevocable Trust,North Haven VII,2019,4000000,3301100.00,2026-03-31,USD,Active,j.lam@meridiancap.example
+src-1009,MC-55831,Osei Family Office,Ridgeline Credit II,2022,2000000,1970100.00,2026-03-31,usd,Active,s.okafor@meridiancap.example
+src-1010,MC-55831,Osei Family Office,Meridian Growth VI - Class A,2020,N/A,1246700.00,2026-03-31,USD,Active,s.okafor@meridiancap.example
+src-1011,MC-44098,Petrova 2015 Trust,Riverview III,2021,1000000,-42100.00,2026-03-31,USD,Active,j.lam@meridiancap.example
+,MC-44098,Petrova 2015 Trust,North Haven VI,2016,2500000,198200.00,2026-03-31,USD,Active,j.lam@meridiancap.example
+src-1013,MC-33502,Chen & Associates Pension,North Haven VII,2019,6000000,4948200.00,31-Mar-2026,USD,Active,k.brennan@meridiancap.example
+src-1014,MC-33502,Chen & Associates Pension,Harborline Secondaries IV,2023,5000000,5102500.00,2026-03-31,USD,Active,k.brennan@meridiancap.example
+src-1015,MC-22870,Lindqvist Stiftelse,Riverview II,2017,3000000,618450.00,2026-03-31,USD,Closed,j.lam@meridiancap.example
+src-1016,MC-22870,Lindqvist Stiftelse,Harborline Secondaries IV,2023,2000000,2041000.00,2026-03-31,EUR,Active,j.lam@meridiancap.example
+src-1017,MC-11556,Okafor Dynasty Trust,North Haven VI,2016,5000000,396100.00,2026-03-31,USD,Closed,s.okafor@meridiancap.example
+src-1018,MC-11556,Okafor Dynasty Trust,Meridian Growth VI - Class B,2020,1000000,1102300.00,2026-03-31,USD,Active,s.okafor@meridiancap.example
+src-1019,MC-09214,Rasmussen Holdings,North Haven VII,2019,7500000,6185250.75,2026-03-31,,Active,k.brennan@meridiancap.example
+src-1020,MC-09214,Rasmussen Holdings,Ridgeline Credit II,2022,1500000,1477650.00,03/31/2026,USD,Active,k.brennan@meridiancap.example
+src-1021,MC-07533,Fernandez 2020 Trust,Riverview III,2021,2000000,1768600.00,2026-03-31,USD,Active,j.lam@meridiancap.example
+src-1022,MC-07533,Fernandez 2020 Trust,North Haven VII,2019,3000000,2474100.00,2026-03-31,USD,Active,j.lam@meridiancap.example
+src-1023,MC-06412,Baird Family Partnership,Harborline Secondaries IV,2023,4000000,4082000.00,31-Mar-2026,USD,Active,s.okafor@meridiancap.example
+src-1024,MC-06412,Baird Family Partnership,Riverview II,2017,1500000,309225.00,2026-03-31,USD,Active,s.okafor@meridiancap.example
+src-1025,MC-05108,Vaughn Charitable Trust,North Haven VII,2019,2500000,2061750.00,2026-03-31,USD,Active,k.brennan@meridiancap.example

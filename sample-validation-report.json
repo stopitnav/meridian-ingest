@@ -1,0 +1,325 @@
+{
+  "source_file": "sample-positions-feed.csv",
+  "ingested_at": "2026-11-11T15:46:29.583742+00:00",
+  "summary": {
+    "total_rows": 25,
+    "inserted": 19,
+    "unchanged": 0,
+    "corrected": 0,
+    "rejected": 4,
+    "held": 1,
+    "superseded_duplicate": 1
+  },
+  "rows": [
+    {
+      "row_number": 1,
+      "source_row_id": "src-1001",
+      "outcome": "inserted",
+      "issues": []
+    },
+    {
+      "row_number": 2,
+      "source_row_id": "src-1002",
+      "outcome": "inserted",
+      "issues": []
+    },
+    {
+      "row_number": 3,
+      "source_row_id": "src-1003",
+      "outcome": "inserted",
+      "issues": []
+    },
+    {
+      "row_number": 4,
+      "source_row_id": "src-1004",
+      "outcome": "inserted",
+      "issues": [
+        {
+          "field": "nav_date",
+          "code": "format_normalized",
+          "severity": "info",
+          "message": "Normalized nav_date to ISO format.",
+          "original_value": "03/31/2026",
+          "corrected_value": "2026-03-31"
+        }
+      ]
+    },
+    {
+      "row_number": 5,
+      "source_row_id": "src-1005",
+      "outcome": "inserted",
+      "issues": [
+        {
+          "field": "fund_name",
+          "code": "share_class_split",
+          "severity": "info",
+          "message": "Split appended share class into its own field.",
+          "original_value": "Meridian Growth VI - Class A",
+          "corrected_value": "Meridian Growth VI | A"
+        }
+      ]
+    },
+    {
+      "row_number": 6,
+      "source_row_id": "src-1006",
+      "outcome": "inserted",
+      "issues": []
+    },
+    {
+      "row_number": 7,
+      "source_row_id": "src-1007",
+      "outcome": "superseded_duplicate",
+      "issues": [
+        {
+          "field": "fund_name",
+          "code": "whitespace_trimmed",
+          "severity": "info",
+          "message": "Trimmed leading/trailing whitespace from fund_name.",
+          "original_value": "North Haven VII ",
+          "corrected_value": "North Haven VII"
+        },
+        {
+          "field": "source_row_id",
+          "code": "duplicate_in_file",
+          "severity": "warn",
+          "message": "Superseded by row 8 for the same source_row_id within this file.",
+          "original_value": null,
+          "corrected_value": null
+        }
+      ]
+    },
+    {
+      "row_number": 8,
+      "source_row_id": "src-1007",
+      "outcome": "inserted",
+      "issues": [
+        {
+          "field": "source_row_id",
+          "code": "duplicate_in_file",
+          "severity": "warn",
+          "message": "source_row_id 'src-1007' appeared 2 times in this file (also row 7); last occurrence in file order was used. Please confirm whether in-file duplicates are expected.",
+          "original_value": null,
+          "corrected_value": null
+        }
+      ]
+    },
+    {
+      "row_number": 9,
+      "source_row_id": "src-1009",
+      "outcome": "inserted",
+      "issues": [
+        {
+          "field": "currency",
+          "code": "case_normalized",
+          "severity": "warn",
+          "message": "Normalized currency code to uppercase.",
+          "original_value": "usd",
+          "corrected_value": "USD"
+        }
+      ]
+    },
+    {
+      "row_number": 10,
+      "source_row_id": "src-1010",
+      "outcome": "inserted",
+      "issues": [
+        {
+          "field": "fund_name",
+          "code": "share_class_split",
+          "severity": "info",
+          "message": "Split appended share class into its own field.",
+          "original_value": "Meridian Growth VI - Class A",
+          "corrected_value": "Meridian Growth VI | A"
+        },
+        {
+          "field": "commitment",
+          "code": "blank_or_non_numeric",
+          "severity": "warn",
+          "message": "Commitment is blank/non-numeric; treated as 0 (commitment-free secondary purchase). Please fix at source.",
+          "original_value": "N/A",
+          "corrected_value": "0"
+        }
+      ]
+    },
+    {
+      "row_number": 11,
+      "source_row_id": "src-1011",
+      "outcome": "rejected",
+      "issues": [
+        {
+          "field": "nav",
+          "code": "negative",
+          "severity": "reject",
+          "message": "NAV is negative; not a valid position value.",
+          "original_value": "-42100.00",
+          "corrected_value": null
+        }
+      ]
+    },
+    {
+      "row_number": 12,
+      "source_row_id": null,
+      "outcome": "rejected",
+      "issues": [
+        {
+          "field": "source_row_id",
+          "code": "missing_key",
+          "severity": "reject",
+          "message": "Row has no source_row_id; cannot key it for the audit trail.",
+          "original_value": "",
+          "corrected_value": null
+        }
+      ]
+    },
+    {
+      "row_number": 13,
+      "source_row_id": "src-1013",
+      "outcome": "inserted",
+      "issues": [
+        {
+          "field": "nav_date",
+          "code": "format_normalized",
+          "severity": "info",
+          "message": "Normalized nav_date to ISO format.",
+          "original_value": "31-Mar-2026",
+          "corrected_value": "2026-03-31"
+        }
+      ]
+    },
+    {
+      "row_number": 14,
+      "source_row_id": "src-1014",
+      "outcome": "inserted",
+      "issues": []
+    },
+    {
+      "row_number": 15,
+      "source_row_id": "src-1015",
+      "outcome": "rejected",
+      "issues": [
+        {
+          "field": "status",
+          "code": "closed_with_nonzero_nav",
+          "severity": "reject",
+          "message": "Closed position has nonzero NAV; per client this indicates a bug on their side. Flagging rather than ingesting.",
+          "original_value": "618450.00",
+          "corrected_value": null
+        }
+      ]
+    },
+    {
+      "row_number": 16,
+      "source_row_id": "src-1016",
+      "outcome": "inserted",
+      "issues": [
+        {
+          "field": "currency",
+          "code": "non_usd",
+          "severity": "warn",
+          "message": "Non-USD currency (EUR); flagged for multi-currency/FX review.",
+          "original_value": null,
+          "corrected_value": null
+        }
+      ]
+    },
+    {
+      "row_number": 17,
+      "source_row_id": "src-1017",
+      "outcome": "rejected",
+      "issues": [
+        {
+          "field": "status",
+          "code": "closed_with_nonzero_nav",
+          "severity": "reject",
+          "message": "Closed position has nonzero NAV; per client this indicates a bug on their side. Flagging rather than ingesting.",
+          "original_value": "396100.00",
+          "corrected_value": null
+        }
+      ]
+    },
+    {
+      "row_number": 18,
+      "source_row_id": "src-1018",
+      "outcome": "inserted",
+      "issues": [
+        {
+          "field": "fund_name",
+          "code": "share_class_split",
+          "severity": "info",
+          "message": "Split appended share class into its own field.",
+          "original_value": "Meridian Growth VI - Class B",
+          "corrected_value": "Meridian Growth VI | B"
+        }
+      ]
+    },
+    {
+      "row_number": 19,
+      "source_row_id": "src-1019",
+      "outcome": "held",
+      "issues": [
+        {
+          "field": "currency",
+          "code": "missing",
+          "severity": "hold",
+          "message": "Currency is blank. Holding rather than assuming USD on a money field.",
+          "original_value": null,
+          "corrected_value": null
+        }
+      ]
+    },
+    {
+      "row_number": 20,
+      "source_row_id": "src-1020",
+      "outcome": "inserted",
+      "issues": [
+        {
+          "field": "nav_date",
+          "code": "format_normalized",
+          "severity": "info",
+          "message": "Normalized nav_date to ISO format.",
+          "original_value": "03/31/2026",
+          "corrected_value": "2026-03-31"
+        }
+      ]
+    },
+    {
+      "row_number": 21,
+      "source_row_id": "src-1021",
+      "outcome": "inserted",
+      "issues": []
+    },
+    {
+      "row_number": 22,
+      "source_row_id": "src-1022",
+      "outcome": "inserted",
+      "issues": []
+    },
+    {
+      "row_number": 23,
+      "source_row_id": "src-1023",
+      "outcome": "inserted",
+      "issues": [
+        {
+          "field": "nav_date",
+          "code": "format_normalized",
+          "severity": "info",
+          "message": "Normalized nav_date to ISO format.",
+          "original_value": "31-Mar-2026",
+          "corrected_value": "2026-03-31"
+        }
+      ]
+    },
+    {
+      "row_number": 24,
+      "source_row_id": "src-1024",
+      "outcome": "inserted",
+      "issues": []
+    },
+    {
+      "row_number": 25,
+      "source_row_id": "src-1025",
+      "outcome": "inserted",
+      "issues": []
+    }
+  ]
+}
