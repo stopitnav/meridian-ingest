@@ -2,6 +2,7 @@ import csv
 import io
 from datetime import datetime, timezone
 
+from .models import RowResult
 from .store import PositionStore
 from .validate import resolve_duplicates, validate_row
 
@@ -16,6 +17,17 @@ def run_ingestion(csv_text: str, source_name: str, db_path: str) -> dict:
     results = resolve_duplicates(results)
 
     now = datetime.now(timezone.utc).isoformat()
+    _store_accepted(results, source_name, db_path, now)
+
+    return {
+        "source_file": source_name,
+        "ingested_at": now,
+        "summary": _build_summary(results),
+        "rows": [_row_to_report(r) for r in results],
+    }
+
+
+def _store_accepted(results: list[RowResult], source_name: str, db_path: str, now: str) -> None:
     store = PositionStore(db_path)
     try:
         for r in results:
@@ -27,33 +39,29 @@ def run_ingestion(csv_text: str, source_name: str, db_path: str) -> dict:
     finally:
         store.close()
 
+
+def _build_summary(results: list[RowResult]) -> dict:
     summary = {"total_rows": len(results)}
     for outcome in ["inserted", "unchanged", "corrected", "rejected", "held", "superseded_duplicate"]:
         summary[outcome] = sum(1 for r in results if r.outcome == outcome)
+    return summary
 
-    rows_report = []
-    for r in results:
-        entry = {
-            "row_number": r.row_number,
-            "source_row_id": r.source_row_id,
-            "outcome": r.outcome,
-            "issues": [
-                {
-                    "field": i.field, "code": i.code, "severity": i.severity,
-                    "message": i.message, "original_value": i.original_value,
-                    "corrected_value": i.corrected_value,
-                }
-                for i in r.issues
-            ],
-        }
-        diff = getattr(r, "issues_diff", None)
-        if diff:
-            entry["diff"] = diff
-        rows_report.append(entry)
 
-    return {
-        "source_file": source_name,
-        "ingested_at": now,
-        "summary": summary,
-        "rows": rows_report,
+def _row_to_report(r: RowResult) -> dict:
+    entry = {
+        "row_number": r.row_number,
+        "source_row_id": r.source_row_id,
+        "outcome": r.outcome,
+        "issues": [
+            {
+                "field": i.field, "code": i.code, "severity": i.severity,
+                "message": i.message, "original_value": i.original_value,
+                "corrected_value": i.corrected_value,
+            }
+            for i in r.issues
+        ],
     }
+    diff = getattr(r, "issues_diff", None)
+    if diff:
+        entry["diff"] = diff
+    return entry

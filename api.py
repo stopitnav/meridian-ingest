@@ -4,6 +4,9 @@ from fastapi.responses import JSONResponse
 from core.pipeline import run_ingestion
 from core.store import PositionStore
 
+# No auth here by design (see README ground rules) — run this only on the
+# internal network/VPN. `uvicorn api:app` binds 127.0.0.1 by default;
+# don't pass --host 0.0.0.0 without adding real auth first.
 app = FastAPI(title="Meridian Positions Ingestion")
 DB_PATH = "positions.sqlite3"
 

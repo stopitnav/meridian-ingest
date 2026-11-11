@@ -62,40 +62,69 @@ class PositionStore:
         diff is a field-level dict of changes for "corrected" (else None).
         """
         new_hash = _content_hash(position)
-        cur = self.conn.execute(
-            "SELECT content_hash, account_id, account_holder, fund_name, share_class, "
-            "vintage_year, commitment, nav, nav_date, currency, status, advisor_email, first_ingested_at "
-            "FROM positions WHERE source_row_id = ?",
-            (position.source_row_id,),
-        )
-        existing = cur.fetchone()
+        existing = self._fetch_existing(position.source_row_id)
 
         if existing is None:
-            self.conn.execute(
-                "INSERT INTO positions (source_row_id, account_id, account_holder, fund_name, "
-                "share_class, vintage_year, commitment, nav, nav_date, currency, status, "
-                "advisor_email, content_hash, first_ingested_at, last_ingested_at, last_source_file) "
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                (
-                    position.source_row_id, position.account_id, position.account_holder,
-                    position.fund_name, position.share_class, position.vintage_year,
-                    str(position.commitment), str(position.nav), position.nav_date,
-                    position.currency, position.status, position.advisor_email,
-                    new_hash, now, now, source_name,
-                ),
-            )
-            self.conn.commit()
+            self._insert(position, source_name, new_hash, now)
             return "inserted", None
 
         old_hash = existing[0]
         if old_hash == new_hash:
-            self.conn.execute(
-                "UPDATE positions SET last_ingested_at = ?, last_source_file = ? WHERE source_row_id = ?",
-                (now, source_name, position.source_row_id),
-            )
-            self.conn.commit()
+            self._touch(position.source_row_id, source_name, now)
             return "unchanged", None
 
+        diff = self._diff(existing, position)
+        self._update(position, source_name, new_hash, now)
+        return "corrected", diff
+
+    def _fetch_existing(self, source_row_id: str) -> tuple | None:
+        cur = self.conn.execute(
+            "SELECT content_hash, account_id, account_holder, fund_name, share_class, "
+            "vintage_year, commitment, nav, nav_date, currency, status, advisor_email, first_ingested_at "
+            "FROM positions WHERE source_row_id = ?",
+            (source_row_id,),
+        )
+        return cur.fetchone()
+
+    def _insert(self, position: CanonicalPosition, source_name: str, content_hash: str, now: str) -> None:
+        self.conn.execute(
+            "INSERT INTO positions (source_row_id, account_id, account_holder, fund_name, "
+            "share_class, vintage_year, commitment, nav, nav_date, currency, status, "
+            "advisor_email, content_hash, first_ingested_at, last_ingested_at, last_source_file) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                position.source_row_id, position.account_id, position.account_holder,
+                position.fund_name, position.share_class, position.vintage_year,
+                str(position.commitment), str(position.nav), position.nav_date,
+                position.currency, position.status, position.advisor_email,
+                content_hash, now, now, source_name,
+            ),
+        )
+        self.conn.commit()
+
+    def _touch(self, source_row_id: str, source_name: str, now: str) -> None:
+        self.conn.execute(
+            "UPDATE positions SET last_ingested_at = ?, last_source_file = ? WHERE source_row_id = ?",
+            (now, source_name, source_row_id),
+        )
+        self.conn.commit()
+
+    def _update(self, position: CanonicalPosition, source_name: str, content_hash: str, now: str) -> None:
+        self.conn.execute(
+            "UPDATE positions SET account_id=?, account_holder=?, fund_name=?, share_class=?, "
+            "vintage_year=?, commitment=?, nav=?, nav_date=?, currency=?, status=?, advisor_email=?, "
+            "content_hash=?, last_ingested_at=?, last_source_file=? WHERE source_row_id=?",
+            (
+                position.account_id, position.account_holder, position.fund_name, position.share_class,
+                position.vintage_year, str(position.commitment), str(position.nav), position.nav_date,
+                position.currency, position.status, position.advisor_email,
+                content_hash, now, source_name, position.source_row_id,
+            ),
+        )
+        self.conn.commit()
+
+    @staticmethod
+    def _diff(existing: tuple, position: CanonicalPosition) -> dict:
         old_fields = dict(zip(
             ["account_id", "account_holder", "fund_name", "share_class", "vintage_year",
              "commitment", "nav", "nav_date", "currency", "status", "advisor_email"],
@@ -109,25 +138,11 @@ class PositionStore:
             "currency": position.currency, "status": position.status,
             "advisor_email": position.advisor_email,
         }
-        diff = {
+        return {
             k: {"old": old_fields[k], "new": new_fields[k]}
             for k in old_fields
             if str(old_fields[k]) != str(new_fields[k])
         }
-
-        self.conn.execute(
-            "UPDATE positions SET account_id=?, account_holder=?, fund_name=?, share_class=?, "
-            "vintage_year=?, commitment=?, nav=?, nav_date=?, currency=?, status=?, advisor_email=?, "
-            "content_hash=?, last_ingested_at=?, last_source_file=? WHERE source_row_id=?",
-            (
-                position.account_id, position.account_holder, position.fund_name, position.share_class,
-                position.vintage_year, str(position.commitment), str(position.nav), position.nav_date,
-                position.currency, position.status, position.advisor_email,
-                new_hash, now, source_name, position.source_row_id,
-            ),
-        )
-        self.conn.commit()
-        return "corrected", diff
 
     def all_positions(self) -> list[dict]:
         cur = self.conn.execute(
