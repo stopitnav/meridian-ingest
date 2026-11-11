@@ -1,6 +1,7 @@
 import hashlib
 import json
 import sqlite3
+from decimal import ROUND_HALF_UP, Decimal
 
 from .models import CanonicalPosition
 
@@ -12,8 +13,8 @@ CREATE TABLE IF NOT EXISTS positions (
     fund_name TEXT,
     share_class TEXT,
     vintage_year INTEGER,
-    commitment TEXT,
-    nav TEXT,
+    commitment_cents INTEGER,
+    nav_cents INTEGER,
     nav_date TEXT,
     currency TEXT,
     status TEXT,
@@ -24,6 +25,18 @@ CREATE TABLE IF NOT EXISTS positions (
     last_source_file TEXT
 );
 """
+
+
+def _to_cents(d: Decimal) -> int:
+    """Money stored as integer minor units, not TEXT or REAL: exact
+    (no float rounding) and still supports native SQL SUM/AVG, unlike a
+    stringified Decimal.
+    """
+    return int((d * 100).to_integral_value(rounding=ROUND_HALF_UP))
+
+
+def _from_cents(cents: int) -> Decimal:
+    return Decimal(cents) / 100
 
 
 def _content_hash(p: CanonicalPosition) -> str:
@@ -81,7 +94,7 @@ class PositionStore:
     def _fetch_existing(self, source_row_id: str) -> tuple | None:
         cur = self.conn.execute(
             "SELECT content_hash, account_id, account_holder, fund_name, share_class, "
-            "vintage_year, commitment, nav, nav_date, currency, status, advisor_email, first_ingested_at "
+            "vintage_year, commitment_cents, nav_cents, nav_date, currency, status, advisor_email, first_ingested_at "
             "FROM positions WHERE source_row_id = ?",
             (source_row_id,),
         )
@@ -90,13 +103,13 @@ class PositionStore:
     def _insert(self, position: CanonicalPosition, source_name: str, content_hash: str, now: str) -> None:
         self.conn.execute(
             "INSERT INTO positions (source_row_id, account_id, account_holder, fund_name, "
-            "share_class, vintage_year, commitment, nav, nav_date, currency, status, "
+            "share_class, vintage_year, commitment_cents, nav_cents, nav_date, currency, status, "
             "advisor_email, content_hash, first_ingested_at, last_ingested_at, last_source_file) "
             "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 position.source_row_id, position.account_id, position.account_holder,
                 position.fund_name, position.share_class, position.vintage_year,
-                str(position.commitment), str(position.nav), position.nav_date,
+                _to_cents(position.commitment), _to_cents(position.nav), position.nav_date,
                 position.currency, position.status, position.advisor_email,
                 content_hash, now, now, source_name,
             ),
@@ -113,11 +126,11 @@ class PositionStore:
     def _update(self, position: CanonicalPosition, source_name: str, content_hash: str, now: str) -> None:
         self.conn.execute(
             "UPDATE positions SET account_id=?, account_holder=?, fund_name=?, share_class=?, "
-            "vintage_year=?, commitment=?, nav=?, nav_date=?, currency=?, status=?, advisor_email=?, "
+            "vintage_year=?, commitment_cents=?, nav_cents=?, nav_date=?, currency=?, status=?, advisor_email=?, "
             "content_hash=?, last_ingested_at=?, last_source_file=? WHERE source_row_id=?",
             (
                 position.account_id, position.account_holder, position.fund_name, position.share_class,
-                position.vintage_year, str(position.commitment), str(position.nav), position.nav_date,
+                position.vintage_year, _to_cents(position.commitment), _to_cents(position.nav), position.nav_date,
                 position.currency, position.status, position.advisor_email,
                 content_hash, now, source_name, position.source_row_id,
             ),
@@ -131,16 +144,18 @@ class PositionStore:
              "commitment", "nav", "nav_date", "currency", "status", "advisor_email"],
             existing[1:12],
         ))
+        old_fields["commitment"] = _from_cents(old_fields["commitment"])
+        old_fields["nav"] = _from_cents(old_fields["nav"])
         new_fields = {
             "account_id": position.account_id, "account_holder": position.account_holder,
             "fund_name": position.fund_name, "share_class": position.share_class,
-            "vintage_year": position.vintage_year, "commitment": str(position.commitment),
-            "nav": str(position.nav), "nav_date": position.nav_date,
+            "vintage_year": position.vintage_year, "commitment": position.commitment,
+            "nav": position.nav, "nav_date": position.nav_date,
             "currency": position.currency, "status": position.status,
             "advisor_email": position.advisor_email,
         }
         return {
-            k: {"old": old_fields[k], "new": new_fields[k]}
+            k: {"old": str(old_fields[k]), "new": str(new_fields[k])}
             for k in old_fields
             if str(old_fields[k]) != str(new_fields[k])
         }
@@ -148,8 +163,12 @@ class PositionStore:
     def all_positions(self) -> list[dict]:
         cur = self.conn.execute(
             "SELECT source_row_id, account_id, account_holder, fund_name, share_class, "
-            "vintage_year, commitment, nav, nav_date, currency, status, advisor_email, "
+            "vintage_year, commitment_cents, nav_cents, nav_date, currency, status, advisor_email, "
             "first_ingested_at, last_ingested_at, last_source_file FROM positions"
         )
         cols = [d[0] for d in cur.description]
-        return [dict(zip(cols, row)) for row in cur.fetchall()]
+        rows = [dict(zip(cols, row)) for row in cur.fetchall()]
+        for row in rows:
+            row["commitment"] = str(_from_cents(row.pop("commitment_cents")))
+            row["nav"] = str(_from_cents(row.pop("nav_cents")))
+        return rows

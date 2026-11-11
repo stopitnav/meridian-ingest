@@ -45,15 +45,20 @@ validated row becomes, decoupled from Meridian's raw column names:
 | `advisor_email` | `str \| None` | `advisor_email` | |
 | `raw` | `dict` | *(whole row)* | Kept in memory for the report only — **never persisted** |
 
-**SQLite table** (`core/store.py::SCHEMA`) mirrors the canonical fields
-exactly, plus four audit columns the canonical model doesn't carry:
+**SQLite table** (`core/store.py::SCHEMA`) mirrors the canonical fields,
+plus four audit columns the canonical model doesn't carry:
 `content_hash` (drives the inserted/updated/ignored decision),
 `first_ingested_at`, `last_ingested_at`, `last_source_file`. Two
 deliberate choices in the schema:
 
-- `commitment` and `nav` are stored as `TEXT` (stringified `Decimal`),
-  not `REAL` — avoids float rounding on money fields, which matters
-  more than query-side arithmetic convenience for a position store.
+- `commitment` and `nav` are stored as `commitment_cents`/`nav_cents`
+  **integer minor units**, not `TEXT` or `REAL`. A platform for LPs/GPs
+  very plausibly needs portfolio-level aggregates (total commitment per
+  account, total NAV across positions) — `REAL` risks float rounding on
+  money, and `TEXT` avoids that rounding but blocks native `SUM`/`AVG`
+  entirely. Integer cents gets both: exact precision and arithmetic that
+  works directly in SQL. Converted back to a decimal string at the
+  API/report boundary (`_from_cents`), so no caller sees minor units.
 - `raw` is dropped before anything reaches SQLite. The original CSV
   row is only needed to build issue messages (original vs. corrected
   value) at report time; keeping it in the store would mean persisting
