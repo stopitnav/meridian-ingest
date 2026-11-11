@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import json
+import os
 import sys
 
 from core.pipeline import run_ingestion
@@ -22,7 +23,7 @@ def main():
     if args.command == "ingest":
         with open(args.csv_path, "r", newline="") as f:
             csv_text = f.read()
-        report = run_ingestion(csv_text, source_file=args.csv_path, db_path=args.db)
+        report = run_ingestion(csv_text, source_name=os.path.basename(args.csv_path), db_path=args.db)
 
         with open(args.report, "w") as f:
             json.dump(report, f, indent=2, default=str)

@@ -14,7 +14,7 @@ async def ingest(file: UploadFile):
     file or with corrected re-deliveries — see report for per-row outcomes.
     """
     content = (await file.read()).decode("utf-8")
-    report = run_ingestion(content, source_file=file.filename, db_path=DB_PATH)
+    report = run_ingestion(content, source_name=file.filename, db_path=DB_PATH)
     return JSONResponse(report)
 
 

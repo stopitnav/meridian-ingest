@@ -1,8 +1,6 @@
 import hashlib
 import json
 import sqlite3
-from dataclasses import asdict
-from decimal import Decimal
 
 from .models import CanonicalPosition
 
@@ -58,7 +56,7 @@ class PositionStore:
     def close(self):
         self.conn.close()
 
-    def upsert(self, position: CanonicalPosition, source_file: str, now: str) -> tuple[str, dict | None]:
+    def upsert(self, position: CanonicalPosition, source_name: str, now: str) -> tuple[str, dict | None]:
         """Insert, update, or no-op a position. Returns (outcome, diff)
         where outcome is "inserted", "unchanged", or "corrected", and
         diff is a field-level dict of changes for "corrected" (else None).
@@ -83,7 +81,7 @@ class PositionStore:
                     position.fund_name, position.share_class, position.vintage_year,
                     str(position.commitment), str(position.nav), position.nav_date,
                     position.currency, position.status, position.advisor_email,
-                    new_hash, now, now, source_file,
+                    new_hash, now, now, source_name,
                 ),
             )
             self.conn.commit()
@@ -93,7 +91,7 @@ class PositionStore:
         if old_hash == new_hash:
             self.conn.execute(
                 "UPDATE positions SET last_ingested_at = ?, last_source_file = ? WHERE source_row_id = ?",
-                (now, source_file, position.source_row_id),
+                (now, source_name, position.source_row_id),
             )
             self.conn.commit()
             return "unchanged", None
@@ -125,7 +123,7 @@ class PositionStore:
                 position.account_id, position.account_holder, position.fund_name, position.share_class,
                 position.vintage_year, str(position.commitment), str(position.nav), position.nav_date,
                 position.currency, position.status, position.advisor_email,
-                new_hash, now, source_file, position.source_row_id,
+                new_hash, now, source_name, position.source_row_id,
             ),
         )
         self.conn.commit()

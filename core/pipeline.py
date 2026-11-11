@@ -1,13 +1,12 @@
 import csv
 import io
-from dataclasses import asdict
 from datetime import datetime, timezone
 
 from .store import PositionStore
 from .validate import resolve_duplicates, validate_row
 
 
-def run_ingestion(csv_text: str, source_file: str, db_path: str) -> dict:
+def run_ingestion(csv_text: str, source_name: str, db_path: str) -> dict:
     """Run the full ingest pipeline over CSV text and return a JSON-able
     report. Safe to call repeatedly with the same file: already-stored,
     unchanged rows are reported as "unchanged", not re-inserted.
@@ -21,7 +20,7 @@ def run_ingestion(csv_text: str, source_file: str, db_path: str) -> dict:
     try:
         for r in results:
             if r.outcome == "accepted" and r.position is not None:
-                store_outcome, diff = store.upsert(r.position, source_file, now)
+                store_outcome, diff = store.upsert(r.position, source_name, now)
                 r.outcome = store_outcome
                 if diff:
                     r.issues_diff = diff  # attached dynamically, only for "corrected"
@@ -53,7 +52,7 @@ def run_ingestion(csv_text: str, source_file: str, db_path: str) -> dict:
         rows_report.append(entry)
 
     return {
-        "source_file": source_file,
+        "source_file": source_name,
         "ingested_at": now,
         "summary": summary,
         "rows": rows_report,
