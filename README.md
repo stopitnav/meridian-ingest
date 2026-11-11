@@ -78,25 +78,28 @@ after a run.
    **auto-fixed to 0 + warned**, per Dana's instruction. Only two row
    outcomes exist — accepted or rejected; *why* lives in the issue
    message, not in extra outcome states.
+
 2. **Idempotent via content-hash, not just key.** Exact resend →
    `ignored`; same key, changed values → `updated` with a field diff
    included in that run's report; new key → `inserted`. "Latest file
    wins" without silently overwriting a value with no record of the
    change.
+
 3. **In-file duplicates (`src-1007`) are `ignored` too**, same bucket as
    a resend — last occurrence wins, but flagged in the issue message
    rather than resolved silently.
+
 4. **Validation is row-level, not file-level** — one bad row doesn't
    block the rest of the file.
-5. **Non-USD currency is accepted, not rejected — a launch default,
-   not a settled answer.** EUR is valid ISO 4217, just uncommon. Worth
+   
+5. **Non-USD currency is accepted, not rejected — a launch default, not a settled answer.** 
+   EUR is valid ISO 4217, just uncommon. Worth
    a flag in review with Dana rather than treating it as a blocking
-   error for now. Open question sent to her: does the platform
-   actually handle multi-currency positions, or should non-USD be
-   rejected until FX conversion exists? May need to change before the
-   100k-row batch.
+   error for now.
+
 6. **Share-class parsing is pattern-specific** (`<Fund> - Class <X>`),
-   not a generic dash-split, so an unrelated dash won't corrupt a name.
+   not a generic dash-split, so an unrelated dash won't corrupt a name. Check with Dana if that's okay.
+
 7. **At 100k-row scale** (discussion only, not built): stream the CSV
    instead of loading it fully into memory; batch SQLite commits once
    per file instead of once per row — measured ~35s → ~0.8s for 100k
