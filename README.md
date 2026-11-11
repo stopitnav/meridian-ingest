@@ -79,13 +79,10 @@ after a run.
    outcomes exist — accepted or rejected; *why* lives in the issue
    message, not in extra outcome states.
 2. **Idempotent via content-hash, not just key.** Exact resend →
-   `ignored`; same key, changed values → `updated`, with a field diff
+   `ignored`; same key, changed values → `updated` with a field diff
    included in that run's report; new key → `inserted`. "Latest file
    wins" without silently overwriting a value with no record of the
-   change — though note the diff lives only in that run's report, not
-   in the database itself, which has no history table and only ever
-   holds current values. Compliance audit-trail durability beyond a
-   single run's report is a gap worth raising, not something built here.
+   change.
 3. **In-file duplicates (`src-1007`) are `ignored` too**, same bucket as
    a resend — last occurrence wins, but flagged in the issue message
    rather than resolved silently.
@@ -105,4 +102,8 @@ after a run.
    per file instead of once per row — measured ~35s → ~0.8s for 100k
    rows, while the content-hash check itself is only ~0.4s and not the
    bottleneck; track ingestion at the file level to catch out-of-order
-   delivery; move the summary from email to a webhook.
+   delivery; move the summary from email to a webhook; add an
+   append-only audit-log table (every insert/update, with the diff)
+   since right now a correction's diff only lives in that one run's
+   report, not durably in the database — a real gap against the
+   compliance audit-trail requirement once reports aren't all retained.
