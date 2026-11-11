@@ -6,14 +6,14 @@
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt   # only needed for the API; the CLI has no dependencies
 
-# CLI
-python cli.py ingest sample-positions-feed.csv --report report.json
+# CLI (run as a module, from the repo root, so `core/` stays importable)
+python -m entrypoints.cli ingest sample-positions-feed.csv --report report.json
 
 # Re-run — safe, won't duplicate or re-insert unchanged rows
-python cli.py ingest sample-positions-feed.csv --report report.json
+python -m entrypoints.cli ingest sample-positions-feed.csv --report report.json
 
 # Minimal API (optional)
-uvicorn api:app --reload
+uvicorn entrypoints.api:app --reload
 curl -X POST http://127.0.0.1:8000/ingest -F "file=@sample-positions-feed.csv"
 curl http://127.0.0.1:8000/positions
 ```
