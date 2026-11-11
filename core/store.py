@@ -58,8 +58,9 @@ class PositionStore:
 
     def upsert(self, position: CanonicalPosition, source_name: str, now: str) -> tuple[str, dict | None]:
         """Insert, update, or no-op a position. Returns (outcome, diff)
-        where outcome is "inserted", "unchanged", or "corrected", and
-        diff is a field-level dict of changes for "corrected" (else None).
+        where outcome is "inserted", "ignored" (exact resend, no content
+        change), or "updated", and diff is a field-level dict of changes
+        for "updated" (else None).
         """
         new_hash = _content_hash(position)
         existing = self._fetch_existing(position.source_row_id)
@@ -71,11 +72,11 @@ class PositionStore:
         old_hash = existing[0]
         if old_hash == new_hash:
             self._touch(position.source_row_id, source_name, now)
-            return "unchanged", None
+            return "ignored", None
 
         diff = self._diff(existing, position)
         self._update(position, source_name, new_hash, now)
-        return "corrected", diff
+        return "updated", diff
 
     def _fetch_existing(self, source_row_id: str) -> tuple | None:
         cur = self.conn.execute(

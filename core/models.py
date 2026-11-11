@@ -34,6 +34,10 @@ class CanonicalPosition:
 class RowResult:
     row_number: int  # 1-indexed within the file, header excluded
     source_row_id: Optional[str]
-    outcome: str  # "accepted" | "rejected" | "held" | "unchanged" | "corrected"
+    # "accepted" | "rejected" from validate_row; "accepted" is then
+    # replaced with "inserted" | "updated" | "ignored" once stored, and
+    # resolve_duplicates may replace any outcome with "ignored" for a
+    # losing in-file duplicate (see its Issue for why it was ignored).
+    outcome: str
     position: Optional[CanonicalPosition]
     issues: list[Issue] = field(default_factory=list)

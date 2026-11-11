@@ -31,12 +31,10 @@ def main():
         s = report["summary"]
         print(f"Ingested {args.csv_path} -> {args.db}")
         print(f"Total rows: {s['total_rows']}")
-        print(f"  inserted:            {s['inserted']}")
-        print(f"  unchanged (no-op):   {s['unchanged']}")
-        print(f"  corrected (updated): {s['corrected']}")
-        print(f"  rejected:            {s['rejected']}")
-        print(f"  held (needs input):  {s['held']}")
-        print(f"  superseded duplicate:{s['superseded_duplicate']}")
+        print(f"  inserted: {s['inserted']}")
+        print(f"  updated:  {s['updated']}")
+        print(f"  ignored:  {s['ignored']}")
+        print(f"  rejected: {s['rejected']}")
         print(f"Full report: {args.report}")
 
 

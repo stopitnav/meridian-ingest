@@ -122,8 +122,8 @@ def _validate_currency(raw: dict, issues: list[Issue]) -> tuple[str | None, bool
     currency_raw = (raw.get("currency") or "").strip()
     if not currency_raw:
         issues.append(Issue(
-            field="currency", code="missing", severity="hold",
-            message="Currency is blank. Holding rather than assuming USD on a money field.",
+            field="currency", code="missing", severity="reject",
+            message="Currency is blank; rejecting rather than assuming USD on a money field.",
         ))
         return None, True
 
@@ -179,11 +179,14 @@ def _validate_advisor_email(raw: dict, issues: list[Issue]) -> str | None:
 def validate_row(row_number: int, raw: dict) -> RowResult:
     """Validate and normalize a single CSV row into a CanonicalPosition.
 
-    Returns a RowResult with outcome set to "accepted", "rejected", or
-    "held" (valid-looking data we don't have enough information to
-    safely ingest, as opposed to data we've determined is wrong).
-    Intra-file duplicate resolution happens in a second pass (see
-    resolve_duplicates), so outcome may be downgraded afterwards.
+    Returns a RowResult with outcome "accepted" or "rejected" — a row
+    either goes into the store or it doesn't; there's no third state.
+    Rejection reasons range from a confirmed bug (e.g. status=Closed
+    with nonzero NAV) to merely missing information (e.g. blank
+    currency) — that distinction lives in each Issue's message, not in
+    a separate outcome. Intra-file duplicate resolution happens in a
+    second pass (see resolve_duplicates), so outcome may be downgraded
+    afterwards.
     """
     issues: list[Issue] = []
 
@@ -195,20 +198,17 @@ def validate_row(row_number: int, raw: dict) -> RowResult:
     commitment, reject_commitment = _validate_commitment(raw, issues)
     nav, reject_nav = _validate_nav(raw, issues)
     nav_date, reject_nav_date = _validate_nav_date(raw, issues)
-    currency, hold_currency = _validate_currency(raw, issues)
+    currency, reject_currency = _validate_currency(raw, issues)
     status, reject_status = _validate_status(raw, nav, issues)
     advisor_email = _validate_advisor_email(raw, issues)
 
     reject = any([
         reject_id, reject_account, reject_commitment,
-        reject_nav, reject_nav_date, reject_status,
+        reject_nav, reject_nav_date, reject_currency, reject_status,
     ])
 
     if reject:
         outcome = "rejected"
-        position = None
-    elif hold_currency:
-        outcome = "held"
         position = None
     else:
         outcome = "accepted"
@@ -262,7 +262,7 @@ def resolve_duplicates(results: list[RowResult]) -> list[RowResult]:
             ),
         ))
         for loser in losers:
-            loser.outcome = "superseded_duplicate"
+            loser.outcome = "ignored"
             loser.position = None
             loser.issues.append(Issue(
                 field="source_row_id", code="duplicate_in_file", severity="warn",

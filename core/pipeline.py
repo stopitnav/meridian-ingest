@@ -10,7 +10,7 @@ from .validate import resolve_duplicates, validate_row
 def run_ingestion(csv_text: str, source_name: str, db_path: str) -> dict:
     """Run the full ingest pipeline over CSV text and return a JSON-able
     report. Safe to call repeatedly with the same file: already-stored,
-    unchanged rows are reported as "unchanged", not re-inserted.
+    unchanged rows are reported as "ignored", not re-inserted.
     """
     reader = csv.DictReader(io.StringIO(csv_text))
     results = [validate_row(i + 1, row) for i, row in enumerate(reader)]
@@ -35,14 +35,14 @@ def _store_accepted(results: list[RowResult], source_name: str, db_path: str, no
                 store_outcome, diff = store.upsert(r.position, source_name, now)
                 r.outcome = store_outcome
                 if diff:
-                    r.issues_diff = diff  # attached dynamically, only for "corrected"
+                    r.issues_diff = diff  # attached dynamically, only for "updated"
     finally:
         store.close()
 
 
 def _build_summary(results: list[RowResult]) -> dict:
     summary = {"total_rows": len(results)}
-    for outcome in ["inserted", "unchanged", "corrected", "rejected", "held", "superseded_duplicate"]:
+    for outcome in ["inserted", "updated", "ignored", "rejected"]:
         summary[outcome] = sum(1 for r in results if r.outcome == outcome)
     return summary
 
